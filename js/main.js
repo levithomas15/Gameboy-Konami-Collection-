@@ -240,8 +240,12 @@ async function insert(slotId) {
   if (!sourceCart) return;
 
   setState('inserting');
-  button.classList.add('is-flying');
   await app.audio?.unlock();
+
+  // Get the console on screen first: the flight is measured against live
+  // element positions, and it is what the user is meant to be watching.
+  await scrollConsoleIntoView();
+  button.classList.add('is-flying');
 
   try {
     await playInsert({
@@ -412,6 +416,38 @@ async function loadState() {
 // ---------------------------------------------------------------------------
 // scaling
 // ---------------------------------------------------------------------------
+
+/**
+ * Brings the console into view and waits until scrolling has settled.
+ *
+ * On a phone the shelf sits below the console, so choosing a cartridge leaves
+ * the console — and every button on it — scrolled off the top of the screen.
+ * Without this the game starts somewhere above the fold and the controls are
+ * simply unreachable.
+ */
+function scrollConsoleIntoView() {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  el.stage.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+
+  return new Promise((resolve) => {
+    const deadline = Date.now() + 900;
+    let previous = -1;
+    let stillFor = 0;
+
+    const check = () => {
+      if (Date.now() > deadline) { resolve(); return; }
+      const y = Math.round(window.scrollY);
+      if (y === previous) {
+        if (++stillFor >= 3) { resolve(); return; }
+      } else {
+        stillFor = 0;
+        previous = y;
+      }
+      requestAnimationFrame(check);
+    };
+    requestAnimationFrame(check);
+  });
+}
 
 function fitConsole() {
   const box = el.stage.getBoundingClientRect();

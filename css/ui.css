@@ -154,10 +154,26 @@
  * Portrait phones: the console takes the screen and the panel goes below it,
  * so the on-screen buttons land under the thumbs.
  */
+/*
+ * Portrait phones. The console gets most of the screen so that the whole
+ * body — including the d-pad and the face buttons — is reachable without
+ * scrolling once a game is running.
+ */
 @media (max-width: 620px) {
   .layout { padding: 10px; gap: 18px; }
-  .stage { min-height: 68svh; }
-  :root { --cart-w: 108px; --cart-h: 120px; --headroom: 96px; }
+  .stage { min-height: 76svh; }
+  :root { --cart-w: 108px; --cart-h: 120px; --headroom: 88px; }
+
+  /* Along the top: at the bottom they sit right over Start and Select. */
+  .toasts {
+    left: 12px;
+    right: 12px;
+    top: 12px;
+    bottom: auto;
+    width: auto;
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
 }
 
 @media (display-mode: fullscreen) {
