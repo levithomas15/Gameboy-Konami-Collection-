@@ -50,6 +50,16 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* Draws the eye to the shelf when someone prods a console with no cartridge. */
+@keyframes calling {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(183, 156, 255, 0); }
+  50%      { box-shadow: 0 0 0 3px rgba(183, 156, 255, 0.55); }
+}
+.shelf.is-calling .slotbtn .cart.is-empty .cart__f--front {
+  border-radius: 7px 7px 4px 4px;
+  animation: calling 800ms ease-in-out 2;
+}
+
 /*
  * Reduced motion: strip the decorative loops and the jolt. The click sound,
  * the LED and the backlight stay — those communicate state rather than

@@ -82,6 +82,22 @@ function refreshToolbar() {
 // toasts
 // ---------------------------------------------------------------------------
 
+/**
+ * Someone is pressing the console's buttons with nothing in the machine.
+ * Say so once in a while — not on every press — and point at the shelf.
+ */
+let lastHint = 0;
+function hintNoCartridge() {
+  if (app.state === 'inserting' || app.state === 'ejecting') return;
+  const now = Date.now();
+  if (now - lastHint < 6000) return;
+  lastHint = now;
+
+  toast('Erst eine Cartridge einstecken — rechts eine auswählen.');
+  el.shelf.classList.add('is-calling');
+  setTimeout(() => el.shelf.classList.remove('is-calling'), 1600);
+}
+
 function toast(message, kind = '') {
   const node = document.createElement('div');
   node.className = `toast${kind ? ` toast--${kind}` : ''}`;
@@ -449,7 +465,12 @@ async function start() {
   app.input = new Input({ dpad: el.dpad, root: el.console });
   app.input.addEventListener('button', (event) => {
     const { button, pressed } = event.detail;
-    app.emulator?.setButton(button, pressed);
+    if (app.state === 'running') {
+      app.emulator?.setButton(button, pressed);
+    } else if (pressed) {
+      // The buttons still move, so say why nothing is happening.
+      hintNoCartridge();
+    }
   });
   app.input.addEventListener('shortcut', (event) => {
     switch (event.detail) {

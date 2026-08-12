@@ -32,6 +32,15 @@ export class Input extends EventTarget {
     super();
     this.dpad = dpad;
     this.root = root;
+
+    /**
+     * Whether presses should reach a game.
+     *
+     * Note this does NOT gate the controls themselves: they always depress
+     * and always raise an event, even with no cartridge in the machine. A
+     * console whose buttons do nothing at all reads as broken, so the
+     * feedback is unconditional and only the forwarding is conditional.
+     */
     this.enabled = false;
 
     /** button name -> how many sources are holding it down */
@@ -105,7 +114,6 @@ export class Input extends EventTarget {
       const button = el.dataset.button;
 
       el.addEventListener('pointerdown', (event) => {
-        if (!this.enabled) return;
         event.preventDefault();
         el.setPointerCapture(event.pointerId);
         this.#setPointer(event.pointerId, new Set([button]));
@@ -122,13 +130,11 @@ export class Input extends EventTarget {
     // The d-pad is one control, hit-tested into a 3x3 grid so that corners
     // give diagonals and a thumb can roll between directions without lifting.
     const track = (event) => {
-      if (!this.enabled) return;
       event.preventDefault();
       this.#setPointer(event.pointerId, this.#dpadHit(event));
     };
 
     this.dpad.addEventListener('pointerdown', (event) => {
-      if (!this.enabled) return;
       this.dpad.setPointerCapture(event.pointerId);
       track(event);
     });
@@ -183,7 +189,6 @@ export class Input extends EventTarget {
         return;
       }
 
-      if (!this.enabled) return;
       const button = KEYMAP[event.code];
       if (!button || event.repeat) return;
       event.preventDefault();
@@ -191,7 +196,7 @@ export class Input extends EventTarget {
     });
 
     window.addEventListener('keyup', (event) => {
-      if (isTyping(event) || !this.enabled) return;
+      if (isTyping(event)) return;
       const button = KEYMAP[event.code];
       if (!button) return;
       event.preventDefault();
@@ -206,7 +211,7 @@ export class Input extends EventTarget {
 
   /** Called once per animation frame by the app. */
   pollGamepad() {
-    if (!this.enabled || !navigator.getGamepads) return;
+    if (!navigator.getGamepads) return;
 
     const pad = [...navigator.getGamepads()].find(Boolean);
     if (!pad) {
