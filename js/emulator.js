@@ -57,6 +57,18 @@ export class Emulator extends EventTarget {
         'The emulator could not start this cartridge.');
     }
 
+    /*
+     * Register where the core should read button state from.
+     *
+     * This is not optional. set_joyp_* only writes into a buffer; without a
+     * joypad callback installed, nothing ever reads that buffer and the
+     * running game sees every button as released forever. The console looks
+     * completely healthy — picture, sound, timing all fine — and simply
+     * ignores the player.
+     */
+    this.joypadPtr = module._joypad_new();
+    module._emulator_set_default_joypad_callback(this.handle, this.joypadPtr);
+
     this.rafId = 0;
     this.lastMs = 0;
     this.destroyed = false;
@@ -115,6 +127,10 @@ export class Emulator extends EventTarget {
     if (this.handle !== 0) {
       this.module._emulator_delete(this.handle);
       this.handle = 0;
+    }
+    if (this.joypadPtr) {
+      this.module._joypad_delete(this.joypadPtr);
+      this.joypadPtr = 0;
     }
     if (this.romPtr !== 0) {
       this.module._free(this.romPtr);
