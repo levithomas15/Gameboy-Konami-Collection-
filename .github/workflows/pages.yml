@@ -1,0 +1,47 @@
+# Veröffentlicht die Seite auf GitHub Pages.
+#
+# Das Projekt ist eine statische Seite ohne Build-Schritt, deshalb wird der
+# Repository-Inhalt unverändert hochgeladen. Damit dieser Ablauf greift, muss
+# unter Settings → Pages als "Source" der Eintrag "GitHub Actions" gewählt
+# sein — nicht "Deploy from a branch".
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # erlaubt das Starten von Hand über den Actions-Tab
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Läuft ein Deploy bereits, wird er zu Ende geführt statt abgebrochen.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Pages vorbereiten
+        uses: actions/configure-pages@v5
+
+      - name: Seite hochladen
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # gesamter Repository-Inhalt: index.html liegt im Wurzelverzeichnis
+          path: .
+
+      - name: Veröffentlichen
+        id: deployment
+        uses: actions/deploy-pages@v4
