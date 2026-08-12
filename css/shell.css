@@ -1,0 +1,457 @@
+/*
+ * The translucent console body.
+ *
+ * The trick to making plastic read as *translucent* rather than as a purple
+ * rectangle with a picture behind it is layering, in this order:
+ *
+ *   1. .console__pcb    the circuit board, drawn sharp then blurred
+ *   2. .console__frost   a backdrop-filter that smears the board underneath
+ *   3. .console__gloss   specular highlights sitting on the surface
+ *   4. .console__edge    inner shadow giving the shell wall its thickness
+ *
+ * Only one element gets backdrop-filter — stacking several is where the
+ * performance falls off a cliff on low-end phones.
+ */
+
+.stage {
+  display: grid;
+  place-items: center;
+  perspective: 1400px;
+  perspective-origin: 50% 38%;
+  /* leaves room overhead for the cartridge to fly through */
+  padding-top: var(--headroom);
+}
+
+.console {
+  position: relative;
+  width: var(--con-w);
+  height: var(--con-h);
+  flex: none;
+  transform: scale(var(--fit));
+  transform-origin: center center;
+  border-radius: var(--con-radius) var(--con-radius)
+                 var(--con-radius-bottom) var(--con-radius);
+  isolation: isolate;
+
+  /* Kept dark and fairly transparent on purpose: the board underneath should
+     carry the colour, not this layer. Push this up and the console goes flat. */
+  background:
+    linear-gradient(160deg,
+      hsl(var(--shell-h) 50% 32% / 0.55) 0%,
+      hsl(var(--shell-h) var(--shell-s) 24% / 0.64) 45%,
+      hsl(var(--shell-h) var(--shell-s) 15% / 0.78) 100%);
+
+  box-shadow:
+    0 40px 80px -28px rgba(0, 0, 0, 0.85),
+    0 8px 24px -8px rgba(0, 0, 0, 0.6),
+    0 0 0 1px hsl(var(--shell-h) 60% 78% / 0.28);
+}
+
+/* --- 1. the circuit board seen through the plastic --------------------- */
+
+.console__pcb {
+  position: absolute;
+  inset: 6px;
+  border-radius: inherit;
+  overflow: hidden;
+  opacity: var(--pcb-opacity);
+  filter: blur(var(--pcb-blur));
+  background:
+    /* horizontal and vertical copper traces */
+    repeating-linear-gradient(90deg,
+      transparent 0 13px, var(--pcb-trace) 13px 14px, transparent 14px 27px),
+    repeating-linear-gradient(0deg,
+      transparent 0 17px, var(--pcb-trace) 17px 18px, transparent 18px 39px),
+    /* solder pads */
+    radial-gradient(circle at 22% 30%, var(--pcb-trace) 0 2px, transparent 3px),
+    radial-gradient(circle at 68% 18%, var(--pcb-trace) 0 2px, transparent 3px),
+    radial-gradient(circle at 40% 62%, var(--pcb-trace) 0 2px, transparent 3px),
+    radial-gradient(circle at 80% 74%, var(--pcb-trace) 0 2px, transparent 3px),
+    var(--pcb-base);
+  /* Real boards are dense up top and empty near the bottom shell. */
+  -webkit-mask-image: linear-gradient(180deg, #000 0 62%, rgba(0,0,0,0.25) 82%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 0 62%, rgba(0,0,0,0.25) 82%, transparent 100%);
+}
+
+.chip {
+  position: absolute;
+  background: #0d0d10;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+/* the pin combs either side of each package */
+.chip::before, .chip::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: 4px;
+  background: repeating-linear-gradient(0deg,
+    #c8b071 0 2px, transparent 2px 5px);
+}
+.chip::before { left: -4px; }
+.chip::after  { right: -4px; }
+
+.chip--cpu   { left: 96px;  top: 300px; width: 74px; height: 74px; }
+.chip--ram   { left: 214px; top: 316px; width: 52px; height: 44px; }
+.chip--small { left: 128px; top: 402px; width: 34px; height: 26px; }
+
+.cap {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #4b4b52, #17171b 70%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+.cap--1 { left: 62px;  top: 268px; width: 20px; height: 20px; }
+.cap--2 { left: 268px; top: 286px; width: 16px; height: 16px; }
+.cap--3 { left: 200px; top: 424px; width: 13px; height: 13px; }
+
+/* --- 2. the frosted plastic ------------------------------------------- */
+
+.console__frost {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  backdrop-filter: blur(5px) saturate(1.4);
+  -webkit-backdrop-filter: blur(5px) saturate(1.4);
+  /* A thin violet wash. This tints the board rather than hiding it. */
+  background: linear-gradient(158deg,
+    hsl(var(--shell-h) 72% 70% / 0.26) 0%,
+    hsl(var(--shell-h) var(--shell-s) 54% / 0.30) 45%,
+    hsl(var(--shell-h) var(--shell-s) 30% / 0.40) 100%);
+}
+
+[data-quality="low"] .console__frost {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: linear-gradient(158deg,
+    hsl(var(--shell-h) 60% 62% / 0.72) 0%,
+    hsl(var(--shell-h) var(--shell-s) 34% / 0.82) 100%);
+}
+
+/* --- 3. surface highlights -------------------------------------------- */
+
+.console__gloss {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 8% 2%,
+      rgba(255, 255, 255, 0.34) 0%, transparent 58%),
+    linear-gradient(112deg,
+      transparent 30%, rgba(255, 255, 255, 0.13) 44%, transparent 58%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 1px 0 0 rgba(255, 255, 255, 0.18);
+}
+
+/* --- 4. shell wall thickness and the moulding seam --------------------- */
+
+.console__edge {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 -16px 26px -14px rgba(24, 8, 42, 0.80),
+    inset 0 4px 14px -8px rgba(24, 8, 42, 0.55);
+}
+/* the faint line where the two shell halves meet */
+.console__edge::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: calc(var(--con-radius) - 3px) calc(var(--con-radius) - 3px)
+                 calc(var(--con-radius-bottom) - 3px) calc(var(--con-radius) - 3px);
+  border: 1px solid hsl(var(--shell-h) 50% 88% / 0.14);
+}
+
+/* ====================== cartridge slot ================================ */
+
+.slot {
+  position: absolute;
+  left: 104px;
+  top: 8px;
+  width: 152px;
+  height: 12px;
+  z-index: 3;
+}
+
+/*
+ * The housing: a raised band of the same plastic as the shell, so the slot
+ * reads as moulded into the console rather than as a black bar floating
+ * above it.
+ */
+.slot::before {
+  content: "";
+  position: absolute;
+  inset: -6px -12px -8px;
+  border-radius: 9px 9px 5px 5px;
+  background: linear-gradient(180deg,
+    hsl(var(--shell-h) 56% 60% / 0.42) 0%,
+    hsl(var(--shell-h) var(--shell-s) 32% / 0.30) 70%,
+    transparent 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+
+.slot__mouth {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #07060b 0%, #14121c 60%, #0a090f 100%);
+  box-shadow:
+    inset 0 5px 9px rgba(0, 0, 0, 0.95),
+    inset 0 -1px 0 hsl(var(--shell-h) 40% 70% / 0.22),
+    0 1px 0 hsl(var(--shell-h) 62% 88% / 0.45);
+  transition: box-shadow 140ms ease-out;
+}
+
+/* the rim flash on seating */
+.slot.is-seating .slot__mouth {
+  box-shadow:
+    inset 0 4px 8px rgba(0, 0, 0, 0.9),
+    inset 0 -1px 0 hsl(var(--shell-h) 60% 82% / 0.6),
+    0 0 12px hsl(var(--shell-h) 80% 70% / 0.55),
+    0 1px 0 hsl(var(--shell-h) 60% 90% / 0.7);
+}
+
+/* the sliver of cartridge left proud of the slot once seated */
+.slot__seated {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: -9px;
+  height: 12px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #55506a 0%, #38344a 60%, #2a2739 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 2px 5px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 120ms ease-out, transform 120ms ease-out;
+}
+.slot.is-loaded .slot__seated { opacity: 1; transform: translateY(0); }
+
+/* ====================== power slider ================================== */
+
+.power {
+  position: absolute;
+  left: 26px;
+  top: 22px;
+  width: 64px;
+  height: 18px;
+}
+
+.power__rail {
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #14121b, #221f2c);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8),
+              0 1px 0 hsl(var(--shell-h) 60% 86% / 0.30);
+}
+
+.power__knob {
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 28px;
+  height: 14px;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #4a4856 0%, #2d2b37 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25),
+              0 1px 3px rgba(0, 0, 0, 0.6);
+  transform: translateX(0);
+  transition: transform 150ms var(--ease-back);
+}
+.console.is-on .power__knob { transform: translateX(32px); }
+
+.power__text {
+  position: absolute;
+  left: 0;
+  top: 20px;
+  width: 100%;
+  text-align: center;
+  font-size: 7px;
+  letter-spacing: 0.10em;
+  color: hsl(var(--shell-h) 30% 92% / 0.55);
+}
+
+/* ====================== screen ======================================== */
+
+.bezel {
+  position: absolute;
+  left: 36px;
+  top: 52px;
+  width: 288px;
+  height: 238px;
+  border-radius: 12px 12px 30px 12px;
+  background: linear-gradient(165deg, #24242c 0%, #16161c 45%, #0e0e13 100%);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.9),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 0 hsl(var(--shell-h) 60% 88% / 0.32);
+}
+
+.bezel__led {
+  position: absolute;
+  left: 13px;
+  top: 108px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #6b2b2b, var(--led-off) 70%);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.6);
+  transition: background 180ms ease-out, box-shadow 180ms ease-out;
+}
+.console.is-on .bezel__led {
+  background: radial-gradient(circle at 35% 30%, #ff9a8a, var(--led-on) 65%);
+  box-shadow: 0 0 8px rgba(255, 47, 34, 0.85), 0 0 18px rgba(255, 47, 34, 0.4);
+}
+
+.bezel__powertext {
+  position: absolute;
+  left: 4px;
+  top: 122px;
+  width: 28px;
+  text-align: center;
+  font-size: 6px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.screen {
+  position: absolute;
+  left: 32px;
+  top: 18px;
+  width: 224px;
+  height: 202px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--lcd-off);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.9),
+              inset 0 2px 10px rgba(0, 0, 0, 0.55);
+}
+
+.screen canvas {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  /* backlight comes up during the power-on ramp */
+  filter: brightness(var(--backlight, 0));
+  transition: filter 450ms ease-out;
+}
+
+/* the faint pixel grid of an LCD */
+.screen__grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.10;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.9) 0 1px, transparent 1px 1.4px),
+    repeating-linear-gradient(0deg,  rgba(0,0,0,0.9) 0 1px, transparent 1px 1.4px);
+}
+
+.screen__glass {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(118deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.04) 26%,
+    transparent 46%);
+}
+
+.screen__off {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(160deg, #16281e 0%, #0e1d15 100%);
+  transition: opacity 300ms ease-out;
+}
+.console.is-on .screen__off { opacity: 0; pointer-events: none; }
+
+.screen__hint {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: rgba(160, 200, 170, 0.5);
+  text-transform: uppercase;
+}
+
+/* ====================== wordmark ====================================== */
+/*
+ * An original mark. It is deliberately not a reproduction of any real
+ * console's logotype — same spirit, different drawing.
+ */
+.brand {
+  position: absolute;
+  left: 44px;
+  top: 300px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.brand__mark {
+  display: flex;
+  font: 800 21px/1 system-ui, sans-serif;
+  font-style: italic;
+  letter-spacing: -0.01em;
+}
+.brand__mark b {
+  color: hsl(calc(var(--shell-h) + var(--i) * 26) 72% 62%);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.brand__sub {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.20em;
+  color: hsl(var(--shell-h) 30% 92% / 0.62);
+}
+
+/* ====================== speaker and volume ============================ */
+
+/*
+ * Speaker: a plain dot grid. An earlier version also carried a mask built
+ * from the same gradient, which cancelled the holes out and left the grille
+ * invisible — the background alone is all this needs.
+ */
+.speaker {
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  width: 100px;
+  height: 100px;
+  transform: rotate(-25deg);
+  background:
+    radial-gradient(circle,
+      rgba(0, 0, 0, 0.55) 0 1.7px,
+      rgba(255, 255, 255, 0.12) 1.7px 2.4px,
+      transparent 2.5px)
+    0 0 / 13px 13px;
+}
+
+/* Volume wheel, on the right edge where the real one lives. */
+.volume {
+  position: absolute;
+  right: -5px;
+  top: 244px;
+  width: 10px;
+  height: 48px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(270deg, #1b1922, #35323f);
+  box-shadow: inset 2px 0 4px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+.volume__wheel {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+    rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 4px);
+}

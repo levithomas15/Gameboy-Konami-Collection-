@@ -1,0 +1,271 @@
+/*
+ * Cartridges.
+ *
+ * Each one is a real six-sided box rather than a flat card. That matters:
+ * during the insert animation the cartridge turns through 90 degrees, and for
+ * a few frames you see its edge and its gold contacts. That glimpse is most of
+ * what sells the whole effect.
+ */
+
+.shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 14px;
+  margin: 4px 0 18px;
+}
+
+.slotbtn {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  perspective: 700px;
+  border-radius: 10px;
+}
+.slotbtn:disabled { cursor: default; }
+
+/* the cartridge is hidden while its double is in flight */
+.slotbtn.is-flying .cart { visibility: hidden; }
+
+/*
+ * While the cartridge is sitting in the console, its place on the shelf
+ * stays visible but ghosted — an empty gap in the grid just reads as a
+ * rendering bug.
+ */
+.slotbtn.is-inserted .cart {
+  opacity: 0.22;
+  filter: grayscale(0.8);
+}
+.slotbtn.is-inserted::after {
+  content: "eingesteckt";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font: 700 9px/1 system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  pointer-events: none;
+}
+
+.cart {
+  position: relative;
+  width: var(--cart-w);
+  height: var(--cart-h);
+  margin: 0 auto;
+  transform-style: preserve-3d;
+  transition: transform 220ms var(--ease-out-quint);
+}
+
+.slotbtn:hover .cart,
+.slotbtn:focus-visible .cart {
+  transform: translateY(-6px) rotateX(6deg) rotateY(-8deg);
+}
+
+.cart__f {
+  position: absolute;
+  backface-visibility: hidden;
+}
+
+.cart__f--front,
+.cart__f--back {
+  width: var(--cart-w);
+  height: var(--cart-h);
+  left: 0; top: 0;
+  border-radius: 7px 7px 4px 4px;
+}
+.cart__f--front  { transform: translateZ(8px); }
+.cart__f--back   { transform: translateZ(-8px) rotateY(180deg); }
+
+.cart__f--left,
+.cart__f--right {
+  width: 16px;
+  height: var(--cart-h);
+  left: 58px; top: 0;
+}
+.cart__f--right { transform: rotateY(90deg)  translateZ(66px); }
+.cart__f--left  { transform: rotateY(-90deg) translateZ(66px); }
+
+.cart__f--top,
+.cart__f--bottom {
+  width: var(--cart-w);
+  height: 16px;
+  left: 0; top: 65px;
+}
+.cart__f--top    { transform: rotateX(90deg)  translateZ(73px); }
+.cart__f--bottom { transform: rotateX(-90deg) translateZ(73px); }
+
+/* --- shell plastic ---------------------------------------------------- */
+
+.cart__f--front {
+  background: linear-gradient(158deg, #6c6880 0%, #4d4a60 45%, #3a3850 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.35);
+}
+.cart__f--back {
+  background: linear-gradient(158deg, #46435a 0%, #302e42 100%);
+}
+/* moulded ribs on the back */
+.cart__f--back::after {
+  content: "";
+  position: absolute;
+  inset: 14px 20px 30px;
+  background: repeating-linear-gradient(0deg,
+    rgba(255,255,255,0.05) 0 2px, transparent 2px 9px);
+  border-radius: 3px;
+}
+
+.cart__f--left,
+.cart__f--right {
+  background: linear-gradient(180deg, #5a5670 0%, #3b3950 100%);
+}
+.cart__f--top {
+  background: linear-gradient(180deg, #6e6a84 0%, #514e66 100%);
+  border-radius: 4px 4px 0 0;
+}
+/* the finger grip along the top edge */
+.cart__f--top::after {
+  content: "";
+  position: absolute;
+  inset: 4px 26px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg,
+    rgba(0,0,0,0.30) 0 2px, transparent 2px 6px);
+}
+
+/* the gold contacts, visible for a beat mid-rotation */
+.cart__f--bottom {
+  background: linear-gradient(180deg, #2b2937 0%, #1d1b26 100%);
+}
+.cart__f--bottom::after {
+  content: "";
+  position: absolute;
+  inset: 3px 16px 3px;
+  border-radius: 1px;
+  background: repeating-linear-gradient(90deg,
+    #d3ae3c 0 6px, #8a6f18 6px 9px);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+/* --- the label -------------------------------------------------------- */
+
+.label {
+  position: absolute;
+  inset: 8px 8px 34px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: linear-gradient(170deg, #f4f1e6 0%, #ded9c9 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+}
+
+.label__band {
+  padding: 4px 6px 3px;
+  background: linear-gradient(90deg,
+    hsl(var(--band-h, 250) 72% 46%) 0%,
+    hsl(calc(var(--band-h, 250) + 34) 74% 54%) 100%);
+  color: #fff;
+}
+.label__vol {
+  font: 800 8px/1 system-ui, sans-serif;
+  letter-spacing: 0.16em;
+}
+.label__name {
+  font: 700 9px/1.15 system-ui, sans-serif;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+}
+
+.label__games {
+  flex: 1;
+  margin: 0;
+  padding: 5px 7px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.label__games li {
+  font: 600 7px/1.25 system-ui, sans-serif;
+  color: #3a3630;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.label__games li::before {
+  content: "▸ ";
+  color: hsl(var(--band-h, 250) 60% 45%);
+}
+
+.label__foot {
+  padding: 3px 7px 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.14);
+  font: 700 6px/1 system-ui, sans-serif;
+  letter-spacing: 0.10em;
+  color: #6b6459;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* --- empty cartridge -------------------------------------------------- */
+
+.cart.is-empty .cart__f--front {
+  background: linear-gradient(158deg, #3a3850 0%, #2b2a3c 100%);
+}
+.cart.is-empty .label {
+  background: repeating-linear-gradient(135deg,
+    rgba(255,255,255,0.045) 0 6px, transparent 6px 12px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.label__plus {
+  font: 300 26px/1 system-ui, sans-serif;
+  color: rgba(255, 255, 255, 0.55);
+}
+.label__empty {
+  font: 700 7px/1.3 system-ui, sans-serif;
+  letter-spacing: 0.10em;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+  padding: 0 8px;
+}
+
+/* a cartridge being dragged over */
+.slotbtn.is-dropping .cart__f--front {
+  box-shadow: inset 0 0 0 2px var(--accent),
+              inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.slotbtn__caption {
+  display: block;
+  margin-top: 7px;
+  font-size: 11px;
+  color: var(--panel-dim);
+  text-align: center;
+}
+
+/* --- the flying cartridge --------------------------------------------- */
+
+.flight {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  perspective: 1400px;
+  perspective-origin: 50% 40%;
+}
+
+.flight .cart {
+  position: absolute;
+  margin: 0;
+  transition: none;
+  will-change: transform, clip-path;
+  filter: drop-shadow(0 18px 22px rgba(0, 0, 0, 0.55));
+}

@@ -1,0 +1,31 @@
+# ---------------------------------------------------------------------------
+# ROM files must never be committed. The games in this collection are
+# copyrighted; this project ships an emulator, never the games themselves.
+# These patterns exist so that an accidental `git add .` cannot leak a dump.
+# ---------------------------------------------------------------------------
+*.gb
+*.gbc
+*.gba
+*.sgb
+*.rom
+*.bin
+
+# Save data produced by the emulator
+*.sav
+*.rtc
+*.state
+
+# Archives that commonly contain ROMs
+*.zip
+*.7z
+*.rar
+
+# ---------------------------------------------------------------------------
+# Ordinary noise
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+node_modules/
+*.log
+.vscode/
+.idea/

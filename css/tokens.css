@@ -1,0 +1,105 @@
+/*
+ * Every colour, dimension and animation timing lives here.
+ *
+ * The console is designed at a fixed 360 x 616 and then scaled as a whole
+ * (--fit, set from JavaScript by a ResizeObserver). Laying it out in fixed
+ * units keeps 40-odd hand-placed details in proportion; nothing is a bitmap,
+ * so scaling stays sharp.
+ */
+
+:root {
+  /* -- shell colourway ------------------------------------------------- */
+  /* Atomic Purple. Swapping --shell-h alone gives a whole new console. */
+  --shell-h: 276;
+  --shell-s: 44%;
+
+  --shell-pale:  hsl(var(--shell-h) 60% 74% / 0.42);
+  --shell-tint:  hsl(var(--shell-h) var(--shell-s) 58% / 0.50);
+  --shell-mid:   hsl(var(--shell-h) var(--shell-s) 40% / 0.62);
+  --shell-deep:  hsl(var(--shell-h) var(--shell-s) 20% / 0.86);
+  --shell-rim:   hsl(var(--shell-h) 70% 86% / 0.72);
+
+  /* what you see through the plastic */
+  --pcb-base:    #123021;
+  --pcb-trace:   #c69a45;
+  --pcb-opacity: 0.62;
+  --pcb-blur:    1.1px;
+
+  /* -- controls -------------------------------------------------------- */
+  --btn-face:  #33323b;
+  --btn-face2: #24232b;
+  --btn-edge:  #17161c;
+  --btn-text:  #6f2d68;
+  --btn-press: 3px;
+
+  --led-off: #4a1418;
+  --led-on:  #ff2f22;
+
+  /* -- screen ---------------------------------------------------------- */
+  --bezel:      #1a1a20;
+  --bezel-edge: #0a0a0e;
+  --lcd-off:    #12251b;
+
+  /* -- geometry -------------------------------------------------------- */
+  --con-w: 360px;
+  --con-h: 616px;
+  --con-radius: 22px;
+  --con-radius-bottom: 62px;   /* the big soft corner along the bottom edge */
+  --fit: 1;                    /* set by js */
+
+  /*
+   * Empty space kept above the console. The cartridge arcs up over the top
+   * edge before it drops into the slot, and without room reserved for that
+   * the whole flight happens off-screen. main.js subtracts this from the
+   * height it fits the console into, so the two always agree.
+   */
+  --headroom: 150px;
+
+  /* -- cartridge ------------------------------------------------------- */
+  --cart-w: 132px;
+  --cart-h: 146px;
+  --cart-d: 16px;              /* half-depth is used in transforms */
+
+  /* -- choreography ----------------------------------------------------
+   * insert.js reads these with getComputedStyle so the CSS and the
+   * JavaScript timings can never drift apart.
+   */
+  --t-lift:  260ms;
+  --t-fly:   640ms;
+  --t-align: 180ms;
+  --t-drop:  240ms;
+  --t-click: 180ms;
+  --t-power: 900ms;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-swing:     cubic-bezier(0.65, 0.05, 0.36, 1);
+  --ease-drop:      cubic-bezier(0.33, 0, 0.20, 1);
+  --ease-back:      cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* -- panel chrome ---------------------------------------------------- */
+  --panel-bg:     rgba(255, 255, 255, 0.04);
+  --panel-line:   rgba(255, 255, 255, 0.10);
+  --panel-dim:    #a9a4bd;
+  --accent:       #b79cff;
+}
+
+/* Alternate colourways, should you ever want them: one line each. */
+[data-shell="berry"] { --shell-h: 336; }
+[data-shell="teal"]  { --shell-h: 178; }
+[data-shell="grape"] { --shell-h: 258; --shell-s: 38%; }
+
+/*
+ * Low-quality mode: dropped into automatically when frames get slow.
+ * backdrop-filter over a large area is the expensive part.
+ */
+[data-quality="low"] {
+  --pcb-opacity: 0.18;
+  --pcb-blur: 0px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-lift: 60ms; --t-fly: 90ms; --t-align: 0ms;
+    --t-drop: 70ms; --t-click: 60ms; --t-power: 180ms;
+  }
+}

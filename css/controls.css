@@ -1,0 +1,177 @@
+/*
+ * D-pad, face buttons and pills.
+ *
+ * Every control shares the same press physics: a fast attack down and a
+ * slightly slower release, which is what makes a button feel mechanical
+ * rather than animated.
+ */
+
+.dpad,
+.face,
+.pill {
+  /* Stop the browser turning a game input into a scroll, a text selection
+     or a long-press menu. Without these, mobile is unplayable. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ====================== d-pad ========================================= */
+/*
+ * One cross-shaped control, not four buttons: it is a single moulded piece
+ * on real hardware, and modelling it that way is what allows a thumb to roll
+ * between directions and to hit diagonals.
+ */
+
+.dpad {
+  position: absolute;
+  left: 30px;
+  top: 372px;
+  width: 108px;
+  height: 108px;
+}
+
+.dpad__arm {
+  position: absolute;
+  background: linear-gradient(150deg, var(--btn-face) 0%, var(--btn-face2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.dpad__arm--v {
+  left: 36px; top: 0; width: 36px; height: 108px; border-radius: 7px;
+}
+.dpad__arm--h {
+  left: 0; top: 36px; width: 108px; height: 36px; border-radius: 7px;
+}
+
+/* the dished centre */
+.dpad__hub {
+  position: absolute;
+  left: 38px; top: 38px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, #2a2933 0%, #1d1c25 70%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.65);
+}
+
+/* Pressed feedback per direction. These sit on top of the arms and darken
+   the relevant end, which reads as that arm tipping into the shell. */
+.dpad__light {
+  position: absolute;
+  border-radius: 7px;
+  opacity: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.18));
+  transition: opacity 120ms ease-out;
+  pointer-events: none;
+}
+.dpad__light--up    { left: 36px; top: 0;    width: 36px; height: 40px; }
+.dpad__light--down  { left: 36px; top: 68px; width: 36px; height: 40px; }
+.dpad__light--left  { left: 0;    top: 36px; width: 40px; height: 36px; }
+.dpad__light--right { left: 68px; top: 36px; width: 40px; height: 36px; }
+
+.dpad[data-up="1"]    .dpad__light--up,
+.dpad[data-down="1"]  .dpad__light--down,
+.dpad[data-left="1"]  .dpad__light--left,
+.dpad[data-right="1"] .dpad__light--right { opacity: 1; transition-duration: 70ms; }
+
+/* ====================== A / B ========================================= */
+
+.ab {
+  position: absolute;
+  right: 20px;
+  top: 358px;
+  width: 142px;
+  height: 100px;
+  transform: rotate(-25deg);
+}
+
+.face {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  background: radial-gradient(circle at 42% 32%,
+    #4a4954 0%, var(--btn-face) 42%, var(--btn-face2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.45),
+    0 3px 6px rgba(0, 0, 0, 0.55);
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+.face[data-button="b"] { left: 0;  top: 38px; }
+.face[data-button="a"] { left: 74px; top: 0; }
+
+/* the letter stays upright while the cluster is on the diagonal */
+.face span {
+  display: block;
+  transform: rotate(25deg);
+  font: 800 15px/1 system-ui, sans-serif;
+  color: var(--btn-text);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.face.is-pressed {
+  transform: translateY(var(--btn-press)) scale(0.98);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 3px rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.5);
+  transition-duration: 70ms;
+}
+
+/* ====================== start / select ================================ */
+
+.pills {
+  position: absolute;
+  left: 96px;
+  top: 500px;
+  width: 176px;
+  height: 56px;
+  display: flex;
+  gap: 16px;
+  transform: rotate(-25deg);
+}
+
+.pill {
+  position: relative;
+  width: 62px;
+  height: 15px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--btn-face) 0%, var(--btn-face2) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+.pill:first-child { margin-top: 14px; }
+
+.pill span {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  font: 700 7px/1 system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  color: hsl(var(--shell-h) 26% 92% / 0.62);
+  white-space: nowrap;
+}
+
+.pill.is-pressed {
+  transform: translateY(2px) scale(0.99);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
+    0 1px 1px rgba(0, 0, 0, 0.5);
+  transition-duration: 70ms;
+}

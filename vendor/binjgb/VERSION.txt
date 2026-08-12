@@ -1,0 +1,16 @@
+binjgb — Game Boy / Game Boy Color emulator core
+Author:  Ben Smith (binji)
+Source:  https://github.com/binji/binjgb
+License: MIT (see LICENSE in this directory)
+
+Vendored files come from the upstream `docs/` directory, unmodified:
+  docs/binjgb.js    13640 bytes   Emscripten glue, exposes the global factory Binjgb()
+  docs/binjgb.wasm  88269 bytes   the emulator core
+
+Upstream commit: c60e138da5a795ebb55e56b11b7e90024e41112c
+Fetched:         2026-08-12
+
+To update, re-download both files from
+  https://raw.githubusercontent.com/binji/binjgb/main/docs/
+and record the new commit here. Do not edit them by hand — js/core-loader.js
+is written so that no patching of the glue is ever required.

@@ -1,0 +1,68 @@
+/*
+ * Position-independent motion.
+ *
+ * The flight path itself is built in JavaScript, because it depends on where
+ * the cartridge happens to be sitting on the shelf. What lives here is
+ * everything that does not need measuring: the jolt, the backlight ramp,
+ * the idle float.
+ */
+
+/* The whole console kicks when a cartridge seats. Small, fast, and it is
+   what makes the click feel like it has mass behind it. */
+@keyframes jolt {
+  0%   { transform: scale(var(--fit)) translateY(0)      rotate(0); }
+  22%  { transform: scale(var(--fit)) translateY(2.5px)  rotate(0.28deg); }
+  48%  { transform: scale(var(--fit)) translateY(-1.2px) rotate(-0.14deg); }
+  74%  { transform: scale(var(--fit)) translateY(0.5px)  rotate(0.06deg); }
+  100% { transform: scale(var(--fit)) translateY(0)      rotate(0); }
+}
+
+.console.is-jolt {
+  animation: jolt 140ms ease-out;
+}
+
+/* Cartridges breathe very slightly on the shelf so the scene is not dead. */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+.slotbtn:not(.is-flying) .cart {
+  animation: float 4.5s ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s);
+}
+.slotbtn:hover .cart,
+.slotbtn:focus-visible .cart { animation-play-state: paused; }
+
+/* Screen grain while a game is running — very subtle, just enough to stop
+   the LCD looking like a flat PNG. */
+@keyframes grain {
+  0%, 100% { opacity: 0.10; }
+  50%      { opacity: 0.13; }
+}
+.console.is-on .screen__grid {
+  animation: grain 2.6s ease-in-out infinite;
+}
+
+/* Toast entry. */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/*
+ * Reduced motion: strip the decorative loops and the jolt. The click sound,
+ * the LED and the backlight stay — those communicate state rather than
+ * decorate it, and removing them would make the console harder to read.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .slotbtn:not(.is-flying) .cart,
+  .console.is-on .screen__grid {
+    animation: none;
+  }
+  .console.is-jolt { animation: none; }
+  .cart { transition: none; }
+  .slotbtn:hover .cart,
+  .slotbtn:focus-visible .cart { transform: translateY(-3px); }
+  .screen canvas { transition-duration: 120ms; }
+}
